@@ -9,7 +9,11 @@ except ImportError:
     pathspec = None
 
 # Define allowed file extensions (modify as needed)
-ALLOWED_EXTENSIONS = ['.tf', '.tfvars', '.py', '.sh', '.txt']
+ALLOWED_EXTENSIONS = ['.tf', '.tfvars', '.py', '.sh', '.java', '.yaml', '.yml', '.json', 
+                      '.md', '.txt', '.kt', '.groovy', '.kts', '.gradle', '.properties', 
+                      '.xml', '.sql', '.csv', '.ini', '.sh', '.conf', '.cfg', '.log', '.gitignore', 
+                      '.dockerignore', '.editorconfig', '.yml.example', '.yaml.example', '.go',
+                      '.service', '.toml', '.proto']
 
 def print_file_contents(starting_dir='.', output_file=None, toc=False, ignore_spec=None):
     """
@@ -99,33 +103,35 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--ignore-file',
-        help="Path to ignore file (default: .scriptignore in script's directory)"
+        action='store_true',
+        help="Use 'ignore' file located in the script directory"
     )
-    
+
     args = parser.parse_args()
-    
-    # Determine ignore file location
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    default_ignore_file = os.path.join(script_dir, '.scriptignore')
-    ignore_file = args.ignore_file or default_ignore_file
-    
-    # Load ignore patterns if file exists
-    if ignore_file and os.path.exists(ignore_file):
-        if pathspec is None:
-            print("Warning: 'pathspec' module not installed. Ignoring patterns skipped.")
-            ignore_spec = None
+
+    # Handle ignore file logic
+    ignore_spec = None
+    if args.ignore_file:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        ignore_file = os.path.join(script_dir, 'ignore')
+        if os.path.exists(ignore_file):
+            if pathspec is None:
+                print("Warning: 'pathspec' module not installed. Ignoring patterns skipped.")
+            else:
+                try:
+                    with open(ignore_file, 'r', encoding='utf-8') as f:
+                        ignore_patterns = f.read().splitlines()
+                    ignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', ignore_patterns)
+                except Exception as e:
+                    print(f"Error parsing ignore file: {str(e)}. Proceeding without ignoring.")
         else:
-            try:
-                with open(ignore_file, 'r', encoding='utf-8') as f:
-                    ignore_patterns = f.read().splitlines()
-                ignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', ignore_patterns)
-            except Exception as e:
-                print(f"Error parsing ignore file '{ignore_file}': {str(e)}. Proceeding without ignoring.")
-                ignore_spec = None
+            print(f"Warning: 'ignore' file not found in script directory. Proceeding without ignoring.")
+
+    # Normalize output file path
+    if args.output and not os.path.isabs(args.output):
+        output_path = os.path.join(os.getcwd(), args.output)
     else:
-        if args.ignore_file:
-            print(f"Warning: Ignore file '{args.ignore_file}' not found. Proceeding without ignoring.")
-        ignore_spec = None
-    
+        output_path = args.output
+
     # Run the main function
-    print_file_contents(args.directory, args.output, args.toc, ignore_spec)
+    print_file_contents(args.directory, output_path, args.toc, ignore_spec)
