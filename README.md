@@ -6,92 +6,141 @@ This Python script recursively processes files from a specified directory, filte
 
 - Recursively traverses a directory and its subdirectories.
 - Filters files based on allowed extensions (e.g., .tf, .tfvars, .py, .sh, .txt).
-- Outputs each file's relative path and contents wrapped in triple backticks () for easy reading. 
-- Supports an optional ignore file (`.scriptignore` by default) to exclude files or directories using patterns. 
-- Can write output to a file or print to the console. 
-- Optionally generates a table of contents listing all included files.  
-  
-## Requirements  
-- **Python 3.x** 
-- **pathspec** library (for ignore file support): Install with `pip install pathspec`  
-  - If `pathspec` is not installed, the script will still run but will skip ignore patterns and print a warning.  
-  
-## Usage  Run the script from the command line using:  
+- Outputs each file's relative path and contents wrapped in triple backticks () for easy reading.
+- Supports an optional ignore file (`.scriptignore` by default) to exclude files or directories using patterns.
+- Can write output to a file or print to the console.
+- Optionally generates a table of contents listing all included files.
+
+## Requirements
+
+- **Python 3.x**
+- **pathspec** library (for ignore file support): Install with `pip install pathspec`
+  - If `pathspec` is not installed, the script will still run but will skip ignore patterns and print a warning.
+
+## Usage Run the script from the command line using:
+
 ```bash
 python3 print_files.py [directory] [options]
 ```
- - **`[directory]`**: The starting directory to process (default: current directory `.`).  
-  
-### Command-Line Options  
+
+- **`[directory]`**: The starting directory to process (default: current directory `.`).
+
+### Command-Line Options
 
 | Option                 | Description                                                                                  |
 | ---------------------- | -------------------------------------------------------------------------------------------- |
 | `-o, --output <file>`  | Specify an output file to write the results to (default: print to console)                   |
 | `-t, --toc`            | Generate a table of contents at the beginning of the output.                                 |
 | `--ignore-file <file>` | Specify a custom path to an ignore file (default: `.scriptignore` in the script's directory) |
--------------
 
-### Examples  
-- **Basic usage** (process current directory, print to console):   
+---
+
+### Examples
+
+- **Basic usage** (process current directory, print to console):
+
 ```bash
 python3 print_files.py
 ```
-**Specify a directory**:   
+
+**Specify a directory**:
+
 ```bash
 python3 print_files.py /path/to/repo
 ```
-**Write output to a file**:   
+
+**Write output to a file**:
+
 ```bash
 python3 print_files.py -o output.txt
 ```
-**Generate a table of contents**:   
+
+**Generate a table of contents**:
+
 ```bash
 python3 print_files.py -t
 ```
-**Use a custom ignore file**:   
+
+**Use a custom ignore file**:
+
 ```bash
 python3 print_files.py --ignore-file custom.ignore
 ```
-**Combine options** (e.g., specify directory, output file, and TOC):   
+
+**Combine options** (e.g., specify directory, output file, and TOC):
+
 ```bash
 python3 print_files.py /path/to/repo -o repo_contents.txt -t
 ```
 
-## Ignore File  
+## Ignore File
 
-The script supports an optional ignore file to exclude specific files or directories: 
+The script supports an optional ignore file to exclude specific files or directories:
 
-- **Default location**: `.scriptignore` in the same directory as the script. 
-- **Custom location**: Specify with `--ignore-file <file>`.  The ignore file uses the same syntax as `.gitignore`: 
-  - Patterns like `*.pyc` to ignore all `.pyc` files. 
-  - Directory patterns like `dir/` to ignore entire directories. 
-  - Negation with `!` to include specific files (e.g., `!important.tf`).  If the ignore file is present but cannot be parsed, the script will print an error and proceed without ignoring.  
-  
-## Allowed File Extensions  
+- **Default location**: `.scriptignore` in the same directory as the script.
+- **Custom location**: Specify with `--ignore-file <file>`. The ignore file uses the same syntax as `.gitignore`:
+  - Patterns like `*.pyc` to ignore all `.pyc` files.
+  - Directory patterns like `dir/` to ignore entire directories.
+  - Negation with `!` to include specific files (e.g., `!important.tf`). If the ignore file is present but cannot be parsed, the script will print an error and proceed without ignoring.
 
-The script only processes files with extensions listed in `ALLOWED_EXTENSIONS` (defined in the script): 
-  - Default extensions: `.tf`, `.tfvars`, `.py`, `.sh`, `.txt` 
-  - To modify, edit the `ALLOWED_EXTENSIONS` list in the script.  
+## Allowed File Extensions
 
-## Output Format  
+The script only processes files with extensions listed in `ALLOWED_EXTENSIONS` (defined in the script):
 
-The output consists of: - **Optional Table of Contents** (if `-t` is used): 
-``` 
+- Default extensions: `.tf`, `.tfvars`, `.py`, `.sh`, `.txt`
+- To modify, edit the `ALLOWED_EXTENSIONS` list in the script.
+
+## Output Format
+
+The output consists of: - **Optional Table of Contents** (if `-t` is used):
+
+```
   Table of Contents
   - /relative/path/to/file1.tf
   - /relative/path/to/file2.py
-  - **File Contents**:  
+  - **File Contents**:
   /relative/path/to/file1.tf
-    
-  # Contents of file1.tf  
+
+  # Contents of file1.tf
   /relative/path/to/file2.py
 
   # Contents of file2.py
 
 ```
 
-## Error Handling
+## Bash Script Helper
 
+A simple bash script (`summarize.sh`) is provided to facilitate running the Python script with common options. Modify the script as needed for your environment.
+
+```bash
+#!/bin/bash
+# First argument: directory (required)
+DIR="${1:-.}"
+# Second argument: output file (optional, defaults to summary.md)
+OUT="${2:-summary.md}"
+# Path to the ignore file (assumed to be in the same directory as print_files.py)
+SCRIPT_DIR="$HOME/git/print-folder-contents"
+IGNORE_FILE="$SCRIPT_DIR/ignore"
+# Check if additional arguments are provided for --ignore-ext
+IGNORE_EXT=""
+if [ $# -gt 2 ]; then
+    # Shift past the first two arguments (DIR and OUT)
+    shift 2
+    IGNORE_EXT="--ignore-ext $@"
+fi
+# Run the Python script with the correct arguments
+"$SCRIPT_DIR/print_files.py" "$DIR" -o "$OUT" -t --ignore-file "$IGNORE_FILE" $IGNORE_EXT
+```
+
+copy to `/usr/local/bin/summarize` and make executable with `chmod +x /usr/local/bin/summarize`.
+
+Now you can create a summary of your current directory with:
+
+```bash
+summarize .
+```
+
+## Error Handling
 
 - If a file cannot be read (e.g., due to permissions), an error message is included:`Error reading file: [error details]`
 
