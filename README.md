@@ -1,148 +1,179 @@
-# File Contents Printer Script
+# Codebase Summary Generator
 
-This Python script recursively processes files from a specified directory, filters them based on allowed file extensions, and outputs their contents with headers showing their relative paths. It supports ignoring specific files or directories using patterns similar to a .gitignore file and can generate a table of contents (TOC) for easy navigation.
+This Python script creates comprehensive codebase summaries by intelligently analyzing and prioritizing files for better understanding of project structure and architecture. It generates detailed summaries with dependency analysis, file prioritization, and smart filtering.
 
 ## Features
 
-- Recursively traverses a directory and its subdirectories.
-- Filters files based on allowed extensions (e.g., .tf, .tfvars, .py, .sh, .txt).
-- Outputs each file's relative path and contents wrapped in triple backticks () for easy reading.
-- Supports an optional ignore file (`.scriptignore` by default) to exclude files or directories using patterns.
-- Can write output to a file or print to the console.
-- Optionally generates a table of contents listing all included files.
+- **Intelligent File Prioritization** - Entry points and configuration files first, followed by core logic
+- **Comprehensive Dependency Analysis** - Automatically detects frameworks, languages, and project types
+- **Smart Auto-Filtering** - Built-in patterns to exclude build artifacts, dependencies, and IDE files
+- **Optimized Output** - Files ordered and annotated for better code understanding
+- **Tech Stack Detection** - Identifies frameworks like Spring Boot, React, Django, etc.
+- **Configuration Analysis** - Recognizes and categorizes config files with descriptions
+- **Multiple Language Support** - Java, Python, JavaScript/TypeScript, Go, Rust, C#, and more
+- **Gitignore Integration** - Respects .gitignore patterns automatically
+- **Large File Handling** - Smart truncation with continuation prompts for very large files
 
 ## Requirements
 
-- **Python 3.x**
-- **pathspec** library (for ignore file support): Install with `pip install pathspec`
-  - If `pathspec` is not installed, the script will still run but will skip ignore patterns and print a warning.
-
-## Usage Run the script from the command line using:
+Create a virtual environment and install dependencies:
 
 ```bash
-python3 print_files.py [directory] [options]
+# Setup (run once)
+./setup.sh
+
+# Activate environment
+source myenv/bin/activate
 ```
 
-- **`[directory]`**: The starting directory to process (default: current directory `.`).
+### Dependencies (requirements.txt)
+```txt
+# Core functionality
+pathspec>=0.10.0
+
+# Enhanced dependency analysis (optional)
+tomli>=2.0.0; python_version < "3.11"
+pyyaml>=6.0
+```
+
+## Usage
+
+```bash
+python summarize.py [directory] [options]
+```
 
 ### Command-Line Options
 
-| Option                 | Description                                                                                  |
-| ---------------------- | -------------------------------------------------------------------------------------------- |
-| `-o, --output <file>`  | Specify an output file to write the results to (default: print to console)                   |
-| `-t, --toc`            | Generate a table of contents at the beginning of the output.                                 |
-| `--ignore-file <file>` | Specify a custom path to an ignore file (default: `.scriptignore` in the script's directory) |
-
----
+| Option                       | Description                                              |
+| ---------------------------- | -------------------------------------------------------- |
+| `-o, --output <file>`        | Output file path (default: print to console)             |
+| `-t, --toc`                  | Generate hierarchical table of contents                  |
+| `--ignore-file <file>`       | Custom ignore file path                                  |
+| `--ignore-ext <ext> [<ext>]` | Additional file extensions to ignore (e.g., `.log .tmp`) |
 
 ### Examples
 
-- **Basic usage** (process current directory, print to console):
-
+**Basic usage** - Generate summary of current directory:
 ```bash
-python3 print_files.py
+python summarize.py . -o summary.txt -t
 ```
 
-**Specify a directory**:
-
+**Focus on source code only** (run from src/ directory):
 ```bash
-python3 print_files.py /path/to/repo
+cd src/main/java
+python ~/path/to/summarize.py . -o ../../../summary.txt -t
 ```
 
-**Write output to a file**:
-
+**Exclude additional file types**:
 ```bash
-python3 print_files.py -o output.txt
+python summarize.py . --ignore-ext .log .properties -o summary.txt
 ```
-
-**Generate a table of contents**:
-
-```bash
-python3 print_files.py -t
-```
-
-**Use a custom ignore file**:
-
-```bash
-python3 print_files.py --ignore-file custom.ignore
-```
-
-**Combine options** (e.g., specify directory, output file, and TOC):
-
-```bash
-python3 print_files.py /path/to/repo -o repo_contents.txt -t
-```
-
-## Ignore File
-
-The script supports an optional ignore file to exclude specific files or directories:
-
-- **Default location**: `.scriptignore` in the same directory as the script.
-- **Custom location**: Specify with `--ignore-file <file>`. The ignore file uses the same syntax as `.gitignore`:
-  - Patterns like `*.pyc` to ignore all `.pyc` files.
-  - Directory patterns like `dir/` to ignore entire directories.
-  - Negation with `!` to include specific files (e.g., `!important.tf`). If the ignore file is present but cannot be parsed, the script will print an error and proceed without ignoring.
-
-## Allowed File Extensions
-
-The script only processes files with extensions listed in `ALLOWED_EXTENSIONS` (defined in the script):
-
-- Default extensions: `.tf`, `.tfvars`, `.py`, `.sh`, `.txt`
-- To modify, edit the `ALLOWED_EXTENSIONS` list in the script.
 
 ## Output Format
 
-The output consists of: - **Optional Table of Contents** (if `-t` is used):
+The generated summary includes:
 
-```
-  Table of Contents
-  - /relative/path/to/file1.tf
-  - /relative/path/to/file2.py
-  - **File Contents**:
-  /relative/path/to/file1.tf
+### 1. Project Overview
+- File count and languages detected
+- Entry points and architecture overview  
+- Dependency analysis and tech stack
 
-  # Contents of file1.tf
-  /relative/path/to/file2.py
+### 2. Prioritized File Contents
+Files are intelligently ordered:
+1. **Entry Points** - main files, application entry points
+2. **Configuration** - build files, framework config, environment settings
+3. **Core Logic** - business logic, services, controllers
+4. **Supporting Files** - utilities, helpers, remaining code
 
-  # Contents of file2.py
+### 3. Rich Metadata
+Each file includes:
+- File size and line count
+- Role indicators (MAIN ENTRY POINT, CONFIGURATION, API/ROUTES)
+- Truncation notices for large files
+- Configuration descriptions where applicable
 
-```
+## Supported File Types
 
-## Bash Script Helper
+**Programming Languages:**
+`.java`, `.py`, `.js`, `.ts`, `.go`, `.rs`, `.cs`, `.kt`, `.swift`, `.rb`, `.php`
 
-A simple bash script (`summarize.sh`) is provided to facilitate running the Python script with common options. Modify the script as needed for your environment.
+**Configuration:**
+`.json`, `.yaml`, `.yml`, `.toml`, `.xml`, `.properties`, `.ini`, `.conf`
+
+**Infrastructure:**
+`.tf`, `.dockerfile`, `.sh`, `.sql`, `.md`
+
+**Web:**
+`.html`, `.css`, `.scss`, `.vue`, `.svelte`, `.jsx`, `.tsx`
+
+## Auto-Ignore Patterns
+
+The script automatically excludes common noise:
+
+- **Build artifacts:** `build/`, `dist/`, `target/`, `.gradle/`
+- **Dependencies:** `node_modules/`, `vendor/`, `__pycache__/`
+- **IDE files:** `.idea/`, `.vscode/`, `.DS_Store`
+- **Lock files:** `package-lock.json`, `yarn.lock`, `Cargo.lock`
+- **Test coverage:** `coverage/`, `.nyc_output/`
+
+## Bash Helper Script
+
+Global installation for easy access:
 
 ```bash
 #!/bin/bash
-# First argument: directory (required)
-DIR="${1:-.}"
-# Second argument: output file (optional, defaults to summary.md)
+# Save as /usr/local/bin/summarize
+
+SCRIPT_DIR="$HOME/git/personal/summarize-folder-contents"
+VENV_DIR="$SCRIPT_DIR/myenv"
+
+DIR="$1"
 OUT="${2:-summary.md}"
-# Path to the ignore file (assumed to be in the same directory as print_files.py)
-SCRIPT_DIR="$HOME/git/print-folder-contents"
-IGNORE_FILE="$SCRIPT_DIR/ignore"
-# Check if additional arguments are provided for --ignore-ext
-IGNORE_EXT=""
-if [ $# -gt 2 ]; then
-    # Shift past the first two arguments (DIR and OUT)
-    shift 2
-    IGNORE_EXT="--ignore-ext $@"
-fi
-# Run the Python script with the correct arguments
-"$SCRIPT_DIR/print_files.py" "$DIR" -o "$OUT" -t --ignore-file "$IGNORE_FILE" $IGNORE_EXT
+
+"$VENV_DIR/bin/python" "$SCRIPT_DIR/summarize.py" "$DIR" -o "$OUT" -t
 ```
-
-copy to `/usr/local/bin/summarize` and make executable with `chmod +x /usr/local/bin/summarize`.
-
-Now you can create a summary of your current directory with:
 
 ```bash
-summarize .
+chmod +x /usr/local/bin/summarize
 ```
 
-## Error Handling
+# Usage
 
-- If a file cannot be read (e.g., due to permissions), an error message is included:`Error reading file: [error details]`
+```bash
+summarize .                    # Current directory → summary.md  
+summarize /path/to/project     # Specific directory → summary.md
+summarize . my-analysis.txt    # Custom output file
+```
 
-- Ignore File Errors: If the ignore file exists but fails to parse, a warning is printed, and the script proceeds without ignoring.
-- File Reading Errors: If a file cannot be read, an error message is included in the output instead of the file's contents.
+## Dependency Analysis
+
+The script automatically detects:
+
+**Project Types:** Backend API, Frontend, Mobile App, Infrastructure, Machine Learning
+
+**Frameworks:** Spring Boot, React, Vue.js, Django, Flask, Express.js, Angular, Next.js
+
+**Languages:** Java, Python, JavaScript, TypeScript, Go, Rust, C#, Kotlin, Swift
+
+**Build Tools:** Maven, Gradle, npm, yarn, pip, cargo, nuget
+
+## Best Practices
+
+### For Code Analysis
+- Run from project root to get dependency analysis
+- Use `-t` flag for navigation
+- Focus on source directories to avoid test noise
+
+### For Code Reviews  
+- Run from specific module/package directories
+- Include configuration files for deployment context
+- Use custom ignore patterns for sensitive files
+
+### For Documentation
+- Generate from project root with full context
+- Include README and documentation files
+- Use descriptive output filenames
+
+## Python Version
+
+This project uses Python 3.11+ (specified in `.python-version`). The virtual environment ensures consistent dependency versions across different systems.

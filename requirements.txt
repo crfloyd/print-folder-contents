@@ -1,0 +1,5 @@
+pathspec>=0.10.0
+tomli>=2.0.0; python_version < "3.11"
+pyyaml>=6.0
+click>=8.0.0
+chardet>=5.0.0
